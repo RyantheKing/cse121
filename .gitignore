@@ -1,0 +1,8 @@
+/esp/
+!**/main/
+!**/CMakeLists.txt
+!**/sdkconfig
+!**/README.md
+**/sdkconfig.old
+**/build/
+.vscode/
