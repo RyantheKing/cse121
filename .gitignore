@@ -1,13 +1,11 @@
-# Ignore everything else
 *
+!*/
 
-/esp/
-**/build/
+esp/
 .vscode/
-**/sdkconfig.old
+*/*/build
 
-!**/main/
-!**/main/** */
-!**/CMakeLists.txt
-!**/sdkconfig
-!**/README.md
+!*/*/main/*
+!*/*/CMakeLists.txt
+!*/*/README.md
+!*/*/sdkconfig
