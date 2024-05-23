@@ -9,3 +9,4 @@ esp/
 !*/*/CMakeLists.txt
 !*/*/README.md
 !*/*/sdkconfig
+!*/report.pdf
