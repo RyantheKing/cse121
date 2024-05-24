@@ -1,9 +1,12 @@
 *
 !*/
 
+esp
 esp/
+.vscode
 .vscode/
 */*/build
+*/*/build/
 
 !*/*/main/*
 !*/*/CMakeLists.txt
