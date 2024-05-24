@@ -1,0 +1,2 @@
+everything works, but it is impossible to only read the last 3 bytes, for humidity (or temperature if you read humidity first) because i2c data must be read sequentially. 
+You could request the data from the sensor twice, and then switch which bytes should print first but that is vastly inefficient.
