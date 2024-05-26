@@ -13,3 +13,5 @@ esp/
 !*/*/README.md
 !*/*/sdkconfig
 !*/report.pdf
+!*/*/gdbinit
+!*/*/lab2_image.elf
