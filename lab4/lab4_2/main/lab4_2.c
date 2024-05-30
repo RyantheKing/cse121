@@ -1,6 +1,5 @@
 #include <string.h>
 #include "esp_bt.h"
-#include "esp_bt_device.h"
 #include "esp_gap_ble_api.h"
 #include "esp_bt_main.h"
 #include "esp_log.h"
