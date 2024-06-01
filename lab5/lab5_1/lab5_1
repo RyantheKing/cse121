@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+
+import RPi.GPIO as GPIO
+import time
+import sys
+
+# Morse code dictionary
+MORSE_CODE_DICT = {
+    'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+    'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+    'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+    'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+    'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---', 
+    '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...', 
+    '8': '---..', '9': '----.'
+}
+
+# Constants
+DOT_DURATION = 0.05  # Duration of a dot in seconds
+DASH_DURATION = 0.15  # Duration of a dash in seconds
+SYMBOL_SPACE = 0.05  # Space between symbols in a character
+CHAR_SPACE = 0.15     # Space between characters
+WORD_SPACE = 0.35    # Space between words
+
+# GPIO setup
+LED_PIN = 18
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(LED_PIN, GPIO.OUT)
+
+def dot():
+    GPIO.output(LED_PIN, GPIO.HIGH)
+    time.sleep(DOT_DURATION)
+    GPIO.output(LED_PIN, GPIO.LOW)
+    time.sleep(SYMBOL_SPACE)
+
+def dash():
+    GPIO.output(LED_PIN, GPIO.HIGH)
+    time.sleep(DASH_DURATION)
+    GPIO.output(LED_PIN, GPIO.LOW)
+    time.sleep(SYMBOL_SPACE)
+
+def flash_message(message):
+    for char in message.upper():
+        if char == ' ':
+            time.sleep(WORD_SPACE)
+        elif char in MORSE_CODE_DICT:
+            for symbol in MORSE_CODE_DICT[char]:
+                if symbol == '.':
+                    dot()
+                elif symbol == '-':
+                    dash()
+            time.sleep(CHAR_SPACE)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: sudo python3 morse_code_led.py <repetitions> <message>")
+        sys.exit(1)
+
+    repetitions = int(sys.argv[1])
+    message = sys.argv[2]
+
+    try:
+        for _ in range(repetitions):
+            flash_message(message)
+            time.sleep(WORD_SPACE * 3)  # Space between repetitions
+    except KeyboardInterrupt:
+        pass
+    finally:
+        GPIO.cleanup()
+
