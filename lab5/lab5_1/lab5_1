@@ -4,6 +4,8 @@ import RPi.GPIO as GPIO
 import time
 import sys
 
+# ChatGPT link https://chatgpt.com/share/d01ec6a4-4b10-4875-9c17-2cd909e838e3
+
 # Morse code dictionary
 MORSE_CODE_DICT = {
     'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
@@ -53,7 +55,7 @@ def flash_message(message):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: sudo python3 morse_code_led.py <repetitions> <message>")
+        print('Usage: ./lab5_1 <repetitions> "<message>"')
         sys.exit(1)
 
     repetitions = int(sys.argv[1])
@@ -62,7 +64,7 @@ if __name__ == "__main__":
     try:
         for _ in range(repetitions):
             flash_message(message)
-            time.sleep(WORD_SPACE * 3)  # Space between repetitions
+            time.sleep(WORD_SPACE * 2)  # Space between repetitions
     except KeyboardInterrupt:
         pass
     finally:
