@@ -1,13 +1,26 @@
 #include <string.h>
+#include <math.h>
 #include "esp_bt.h"
 #include "esp_gap_ble_api.h"
 #include "esp_bt_main.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "driver/i2c.h"
+#include "esp_timer.h"
 
 #include "esp_hidd_prf_api.h"
 
 #define HID_MOUSE_TAG "HID_MOUSE"
+
+#define I2C_MASTER_SCL_IO 8
+#define I2C_MASTER_SDA_IO 10
+#define I2C_MASTER_NUM I2C_NUM_0
+#define I2C_MASTER_FREQ_HZ 1000000
+#define I2C_MASTER_TX_BUF_DISABLE 0
+#define I2C_MASTER_RX_BUF_DISABLE 0
+
+#define IMU_SENSOR_ADDR 0x68
+#define GYRO_XOUT_H 0x11
 
 static uint16_t hid_conn_id = 0;
 static bool sec_conn = false;
@@ -45,6 +58,52 @@ static esp_ble_adv_params_t hidd_adv_params = {
     .channel_map        = ADV_CHNL_ALL,
     .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
 };
+
+static esp_err_t write_register(uint8_t reg, uint8_t data) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, IMU_SENSOR_ADDR << 1 | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(cmd, reg, true);
+    i2c_master_write_byte(cmd, data, true);
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
+
+static esp_err_t read_register(uint8_t reg, uint8_t *data, size_t len) {
+    if (len == 0) {
+        return ESP_OK;
+    }
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, IMU_SENSOR_ADDR  << 1 | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(cmd, reg, true);
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, IMU_SENSOR_ADDR << 1 | I2C_MASTER_READ, true);
+    if (len > 1) {
+        i2c_master_read(cmd, data, len - 1, I2C_MASTER_ACK);
+    }
+    i2c_master_read_byte(cmd, data + len - 1, I2C_MASTER_NACK);
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
+
+static esp_err_t i2c_master_init() {
+    int i2c_master_port = I2C_MASTER_NUM;
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .sda_pullup_en = GPIO_PULLUP_DISABLE,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .scl_pullup_en = GPIO_PULLUP_DISABLE,
+        .master.clk_speed = I2C_MASTER_FREQ_HZ,
+    };
+    i2c_param_config(i2c_master_port, &conf);
+    return i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+}
 
 static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param)
 {
@@ -122,15 +181,73 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
 void mouse_move_task()
 {
+    int16_t x = 0;
+    int16_t y = 0;
+
+    // // time
+    // int64_t current_time = 0;
+    // int64_t prev_time = 0;
+
+    // int16_t diff_x = 0;
+    // int16_t diff_y = 0;
+
+    // float velocityX = 0, velocityY = 0;
+    // float accelX = 0, accelY = 0;
+    // float prevAccelX = 0, prevAccelY = 0;
+
+    // int sampling_rate = 25;
+    // float dt = sampling_rate / 1000.0;
+
+    // char dir[11];
+    uint8_t data[6];
+
+    // vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    // if (read_register(GYRO_XOUT_H, data, 6) == ESP_OK) {
+    //         diff_x = (int16_t)((data[0] << 8) | data[1]);
+    //         diff_y = (int16_t)((data[2] << 8) | data[3]);
+    //         // diff_z = (int16_t)((data[4] << 8) | data[5]);
+    //         ESP_LOGI(HID_MOUSE_TAG, "diff_x: %d, diff_y: %d", diff_x, diff_y);
+    // }
+    // vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    // prev_time = esp_timer_get_time();
+
     while (true) {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        if (read_register(GYRO_XOUT_H, data, 6) == ESP_OK) {
+            // x = ;
+            // y = ;
+            // z = (int16_t)((data[4] << 8) | data[5]);
+
+            x = (int16_t)((data[0] << 8) | data[1]);
+            y = (int16_t)((data[2] << 8) | data[3]);
+
+            // if (fabs(accelX) < 100 && fabs(accelY) < 100) {
+            //     diff_x = x;
+            //     diff_y = y;
+            //     accelX = x - diff_x;
+            //     accelY = y - diff_y;
+            // }
+
+
+            // get time
+            // current_time = esp_timer_get_time();
+
+            // velocityX += (accelX + prevAccelX) * (current_time-prev_time) / 2000000.0;
+            // velocityY += (accelY + prevAccelY) * (current_time-prev_time) / 2000000.0;
+
+            // prev_time = current_time;
+
+            // prevAccelX = accelX;
+            // prevAccelY = accelY;
+
+            // // if (fabs(accelX) < 100) velocityX *= 0.8;
+            // // if (fabs(accelY) < 100) velocityY *= 0.8;
+        }
+        // ESP_LOGI(HID_MOUSE_TAG, "velocityX: %d, velocityY: %d", (int)velocityX, (int)velocityY);
+        // ESP_LOGI(HID_MOUSE_TAG, "accelX: %d, accelY: %d", x/100, y/100);
         if (sec_conn) {
-            ESP_LOGI(HID_MOUSE_TAG, "Move mouse left to right");
-            for (int i = 0; i < 40; i++) {
-                esp_hidd_send_mouse_value(0, 0, 10, 0);
-                vTaskDelay(10 / portTICK_PERIOD_MS);
-            }
-            vTaskDelay(5000 / portTICK_PERIOD_MS);
+            esp_hidd_send_mouse_value(0, 0, -y/300, -x/300);
         }
     }
 }
@@ -196,6 +313,15 @@ void app_main(void)
     esp_ble_gap_set_security_param(ESP_BLE_SM_MAX_KEY_SIZE, &key_size, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &init_key, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
+
+
+    // gyroscope setup
+    ESP_ERROR_CHECK(i2c_master_init());
+    // write_register(0x1F, 0x03);
+    // write_register(0x21, 0x66);
+    write_register(0x1F, 0x0C);
+    write_register(0x20, 0x05);
+    write_register(0x23, 0x07);
 
     xTaskCreate(&mouse_move_task, "move_mouse_task", 2048, NULL, 5, NULL);
 }

@@ -1,10 +1,9 @@
 #include "driver/i2c.h"
 #include "esp_log.h"
-#include "esp_system.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+// #include "esp_system.h"
+// #include "freertos/FreeRTOS.h"
+// #include "freertos/task.h"
 #include <string.h>
-#include <stdio.h>
 #include <math.h>
 
 #define I2C_MASTER_SCL_IO 8
