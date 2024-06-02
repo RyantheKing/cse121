@@ -108,7 +108,7 @@ void app_main(void)
                 if (light_gap > DASH) {
                     // add to morse code
                     strcat(morse_code_str, "-");
-                } else {
+                } else if (light_gap > DOT) {
                     // add to morse code
                     strcat(morse_code_str, ".");
                 }
