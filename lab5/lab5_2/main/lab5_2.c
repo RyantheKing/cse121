@@ -9,12 +9,13 @@
 #define ADC_ATTEN ADC_ATTEN_DB_12
 
 // morse code constants
-#define DOT (50 - 40) * 1000
-#define DASH (150 - 40) * 1000
-#define SYMBOL_SPACE (50 - 40) * 1000
-#define LETTER_SPACE (150 - 40) * 1000
-#define WORD_SPACE (350 - 40) * 1000
-#define NEWLINE (700 - 40) * 1000
+#define BASE 50
+#define DOT (BASE - 40) * 1000
+#define DASH (BASE*3 - 40) * 1000
+#define SYMBOL_SPACE (BASE - 40) * 1000
+#define LETTER_SPACE (BASE*3 - 40) * 1000
+#define WORD_SPACE (BASE*7 - 40) * 1000
+#define NEWLINE (BASE*14 - 40) * 1000
 
 int THRESHOLD = 0;
 
