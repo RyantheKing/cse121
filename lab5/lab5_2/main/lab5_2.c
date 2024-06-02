@@ -10,12 +10,12 @@
 
 // morse code constants
 #define BASE 50
-#define DOT (BASE - 40) * 1000
-#define DASH (BASE*3 - 40) * 1000
-#define SYMBOL_SPACE (BASE - 40) * 1000
-#define LETTER_SPACE (BASE*3 - 40) * 1000
-#define WORD_SPACE (BASE*7 - 40) * 1000
-#define NEWLINE (BASE*14 - 40) * 1000
+#define DOT (BASE - BASE*0.8) * 1000
+#define DASH (BASE*3 - BASE*0.8) * 1000
+#define SYMBOL_SPACE (BASE - BASE*0.8) * 1000
+#define LETTER_SPACE (BASE*3 - BASE*0.8) * 1000
+#define WORD_SPACE (BASE*7 - BASE*0.8) * 1000
+#define NEWLINE (BASE*14 - BASE*0.8) * 1000
 
 int THRESHOLD = 0;
 
