@@ -18,11 +18,13 @@ MORSE_CODE_DICT = {
 }
 
 # Constants
-DOT_DURATION = 0.05  # Duration of a dot in seconds
-DASH_DURATION = 0.15  # Duration of a dash in seconds
-SYMBOL_SPACE = 0.05  # Space between symbols in a character
-CHAR_SPACE = 0.15     # Space between characters
-WORD_SPACE = 0.35    # Space between words
+BASE = 0.05
+DOT_DURATION = BASE    # Duration of a dot in seconds
+DASH_DURATION = BASE*3 # Duration of a dash in seconds
+SYMBOL_SPACE = BASE    # Space between symbols in a character
+CHAR_SPACE = BASE*3    # Space between characters
+WORD_SPACE = BASE*7    # Space between words
+NEWLINE_SPACE = BASE*14
 
 # GPIO setup
 LED_PIN = 18
@@ -64,7 +66,7 @@ if __name__ == "__main__":
     try:
         for _ in range(repetitions):
             flash_message(message)
-            time.sleep(WORD_SPACE * 2)  # Space between repetitions
+            time.sleep(NEWLINE_SPACE)  # Space between repetitions
     except KeyboardInterrupt:
         pass
     finally:
