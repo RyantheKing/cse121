@@ -10,7 +10,7 @@
 #define ADC_ATTEN ADC_ATTEN_DB_12
 
 // morse code constants
-#define BASE 0.15
+#define BASE 0.2
 #define DOT (BASE - BASE*0.8) * 1000
 #define DASH (BASE*3 - BASE*0.8) * 1000
 #define SYMBOL_SPACE (BASE - BASE*0.8) * 1000

@@ -23,6 +23,7 @@ const char *morse_code[] = {
     ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---",
     "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-",
     "..-", "...-", ".--", "-..-", "-.--", "--..",
+    "-----", ".----", "..---", "...--", "....-", ".....", "-....", "--...", "---..", "----."
 };
 
 void app_main(void)
@@ -72,6 +73,12 @@ void app_main(void)
                     break;
                 }
             }
+            for (int i = 26; i < 36; i++) {
+                if (strcmp(morse_code[i], morse_code_str) == 0) {
+                    printf("%d", i - 26);
+                    break;
+                }
+            }
             memset(morse_code_str, 0, sizeof(morse_code_str));
             index = 0;
             printf("\n");
@@ -88,6 +95,12 @@ void app_main(void)
                         for (int i = 0; i < 26; i++) {
                             if (strcmp(morse_code[i], morse_code_str) == 0) {
                                 printf("%c", 'A' + i);
+                                break;
+                            }
+                        }
+                        for (int i = 26; i < 36; i++) {
+                            if (strcmp(morse_code[i], morse_code_str) == 0) {
+                                printf("%d", i - 26);
                                 break;
                             }
                         }
