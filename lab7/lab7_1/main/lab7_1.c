@@ -43,7 +43,7 @@ static const char *TAG = "example";
 static const char HOWSMYSSL_REQUEST[] = 
     "GET " WEB_PATH " HTTP/1.1\r\n"
     "Host: " WEB_SERVER "\r\n"
-    "User-Agent: esp-idf/1.0 esp32\r\n"
+    "User-Agent: esp-idf/5.2 esp32\r\n"
     "\r\n";
     
 extern const uint8_t server_root_cert_pem_start[] asm("_binary_server_root_cert_pem_start");
