@@ -17,7 +17,7 @@
 #define ACK_VAL 0x0
 #define NACK_VAL 0x1
 
-static const char *TAG = "SHTC3";
+static const char *I2C_TAG = "SHTC3";
 
 static esp_err_t i2c_master_init()
 {
@@ -96,7 +96,7 @@ static esp_err_t read_temperature(float *temperature) {
     }
 
     if (crc8(data, 2) != data[2]) {
-        ESP_LOGE(TAG, "CRC check failed");
+        ESP_LOGE(I2C_TAG, "CRC check failed");
         return ESP_ERR_INVALID_CRC;
     }
 
@@ -123,10 +123,10 @@ static esp_err_t read_humidity(float *humidity) {
     }
 
     if (crc8(data, 2) != data[2]) {
-        ESP_LOGE(TAG, "CRC check failed");
+        ESP_LOGE(I2C_TAG, "CRC check failed");
         return ESP_ERR_INVALID_CRC;
     } else {
-        ESP_LOGI(TAG, "CRC check passed");
+        ESP_LOGI(I2C_TAG, "CRC check passed");
     }
 
     uint16_t humidity_raw = (data[0] << 8) | data[1];

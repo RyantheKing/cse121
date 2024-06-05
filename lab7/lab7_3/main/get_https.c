@@ -31,7 +31,6 @@
 #define WEB_SERVER "wttr.in"
 #define WEB_PORT "443"
 #define WEB_URL "https://wttr.in" // /Santa+Cruz?format=%%t"
-#define WEB_PATH "/Santa+Cruz?m&format=%t"
 
 #define SERVER_URL_MAX_SZ 256
 
@@ -40,18 +39,16 @@ static const char *TAG = "example";
 /* Timer interval once every day (24 Hours) */
 #define TIME_PERIOD (86400000000ULL)
 
-static const char HOWSMYSSL_REQUEST[] = 
-    "GET " WEB_PATH " HTTP/1.1\r\n"
-    "Host: " WEB_SERVER "\r\n"
-    "User-Agent: esp-idf/5.2 esp32\r\n"
-    "\r\n";
+// static const char HOWSMYSSL_REQUEST[] = 
+//     "GET /Santa+Cruz?m&format=%t HTTP/1.1\r\n"
+//     "Host: " WEB_SERVER "\r\n"
+//     "User-Agent: esp-idf/5.2 esp32\r\n"
+//     "\r\n";
     
 extern const uint8_t server_root_cert_pem_start[] asm("_binary_server_root_cert_pem_start");
 extern const uint8_t server_root_cert_pem_end[]   asm("_binary_server_root_cert_pem_end");
 
-int temperature = 0;
-
-static void https_get_request(esp_tls_cfg_t cfg, const char *WEB_SERVER_URL, const char *REQUEST)
+static void https_get_request(esp_tls_cfg_t cfg, const char *WEB_SERVER_URL, const char *REQUEST, int *temp)
 {
     char buf[512];
     int ret, len;
@@ -111,7 +108,8 @@ static void https_get_request(esp_tls_cfg_t cfg, const char *WEB_SERVER_URL, con
         ESP_LOGI(TAG, "%d bytes read", len);
         // get bytes len-6 to len-4
         buf[len-3] = '\0';
-        temperature = atoi(&buf[len-6]);
+        // printf("TEST: %s\n", &buf[len-6]);
+        *temp = atoi(&buf[len-6]);
     } while (1);
 
 cleanup:
@@ -119,7 +117,7 @@ cleanup:
 exit:
 }
 
-static void https_get_request_using_global_ca_store(void)
+static void https_get_request_using_global_ca_store(char *location, int *temp)
 {
     esp_err_t esp_ret = ESP_FAIL;
     ESP_LOGI(TAG, "https_request using global ca_store");
@@ -131,45 +129,21 @@ static void https_get_request_using_global_ca_store(void)
     esp_tls_cfg_t cfg = {
         .use_global_ca_store = true,
     };
-    https_get_request(cfg, WEB_URL, HOWSMYSSL_REQUEST);
+
+    char REQUEST[256];
+    sprintf(REQUEST, 
+        "GET /%s?m&format=%%t HTTP/1.1\r\n"
+        "Host: " WEB_SERVER "\r\n"
+        "User-Agent: esp-idf/5.2 esp32\r\n"
+        "\r\n", location);
+
+    https_get_request(cfg, WEB_URL, REQUEST, temp);
     esp_tls_free_global_ca_store();
 }
 
-static void https_request_task(void *pvparameters)
+static void temp_request(char *location, int *temp)
 {
-    ESP_LOGI(TAG, "Start https_request example");
-
     ESP_LOGI(TAG, "Minimum free heap size: %" PRIu32 " bytes", esp_get_minimum_free_heap_size());
-    https_get_request_using_global_ca_store();
+    https_get_request_using_global_ca_store(location, temp);
     ESP_LOGI(TAG, "Finish https_request example");
-    printf("Temperature: %d\n", temperature);
-    vTaskDelete(NULL);
-}
-
-void app_main(void)
-{
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-     * Read "Establishing Wi-Fi or Ethernet Connection" section in
-     * examples/protocols/README.md for more information about this function.
-     */
-    ESP_ERROR_CHECK(example_connect());
-
-    if (esp_reset_reason() == ESP_RST_POWERON) {
-        ESP_LOGI(TAG, "Updating time from NVS");
-        ESP_ERROR_CHECK(update_time_from_nvs());
-    }
-
-    const esp_timer_create_args_t nvs_update_timer_args = {
-            .callback = (void *)&fetch_and_store_time_in_nvs,
-    };
-
-    esp_timer_handle_t nvs_update_timer;
-    ESP_ERROR_CHECK(esp_timer_create(&nvs_update_timer_args, &nvs_update_timer));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(nvs_update_timer, TIME_PERIOD));
-
-    xTaskCreate(&https_request_task, "https_get_task", 8192, NULL, 5, NULL);
 }

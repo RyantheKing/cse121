@@ -21,9 +21,9 @@
 #define LOCAL_WEB_PORT "1234"
 #define LOCAL_WEB_PATH "/location"
 
-static const char *TAG = "local_get";
+static const char *LOCAL_GET_TAG = "local_get";
 
-static const char *REQUEST = "GET " LOCAL_WEB_PATH " HTTP/1.0\r\n"
+static const char *REQUEST = "GET " LOCAL_WEB_PATH " HTTP/1.1\r\n"
     "Host: "LOCAL_WEB_SERVER":"LOCAL_WEB_PORT"\r\n"
     "User-Agent: esp-idf/1.0 esp32\r\n"
     "\r\n";
@@ -42,7 +42,7 @@ static void get_location(char *location)
     int err = getaddrinfo(LOCAL_WEB_SERVER, LOCAL_WEB_PORT, &hints, &res);
 
     if(err != 0 || res == NULL) {
-        ESP_LOGE(TAG, "DNS lookup failed err=%d res=%p", err, res);
+        ESP_LOGE(LOCAL_GET_TAG, "DNS lookup failed err=%d res=%p", err, res);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         return;
     }
@@ -51,47 +51,47 @@ static void get_location(char *location)
 
         Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */
     addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
-    ESP_LOGI(TAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
+    ESP_LOGI(LOCAL_GET_TAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
 
     s = socket(res->ai_family, res->ai_socktype, 0);
     if(s < 0) {
-        ESP_LOGE(TAG, "... Failed to allocate socket.");
+        ESP_LOGE(LOCAL_GET_TAG, "... Failed to allocate socket.");
         freeaddrinfo(res);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         return;
     }
-    ESP_LOGI(TAG, "... allocated socket");
+    ESP_LOGI(LOCAL_GET_TAG, "... allocated socket");
 
     if(connect(s, res->ai_addr, res->ai_addrlen) != 0) {
-        ESP_LOGE(TAG, "... socket connect failed errno=%d", errno);
+        ESP_LOGE(LOCAL_GET_TAG, "... socket connect failed errno=%d", errno);
         close(s);
         freeaddrinfo(res);
         vTaskDelay(4000 / portTICK_PERIOD_MS);
         return;
     }
 
-    ESP_LOGI(TAG, "... connected");
+    ESP_LOGI(LOCAL_GET_TAG, "... connected");
     freeaddrinfo(res);
 
     if (write(s, REQUEST, strlen(REQUEST)) < 0) {
-        ESP_LOGE(TAG, "... socket send failed");
+        ESP_LOGE(LOCAL_GET_TAG, "... socket send failed");
         close(s);
         vTaskDelay(4000 / portTICK_PERIOD_MS);
         return;
     }
-    ESP_LOGI(TAG, "... socket send success");
+    ESP_LOGI(LOCAL_GET_TAG, "... socket send success");
 
     struct timeval receiving_timeout;
     receiving_timeout.tv_sec = 5;
     receiving_timeout.tv_usec = 0;
     if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &receiving_timeout,
             sizeof(receiving_timeout)) < 0) {
-        ESP_LOGE(TAG, "... failed to set socket receiving timeout");
+        ESP_LOGE(LOCAL_GET_TAG, "... failed to set socket receiving timeout");
         close(s);
         vTaskDelay(4000 / portTICK_PERIOD_MS);
         return;
     }
-    ESP_LOGI(TAG, "... set socket receiving timeout success");
+    ESP_LOGI(LOCAL_GET_TAG, "... set socket receiving timeout success");
 
     /* Read HTTP response */
     do {
@@ -99,29 +99,30 @@ static void get_location(char *location)
         r = read(s, recv_buf, sizeof(recv_buf)-1);
         // put in location string
         if (r > 0) {
-            strcat(location, recv_buf);
+            strcpy(location, recv_buf);
         }
     } while(r > 0);
+    strcat(location, "\0");
 
-    ESP_LOGI(TAG, "... done reading from socket. Last read return=%d errno=%d.", r, errno);
+    ESP_LOGI(LOCAL_GET_TAG, "... done reading from socket. Last read return=%d errno=%d.", r, errno);
     close(s);
     return;
 }
 
-void app_main(void)
-{
-    ESP_ERROR_CHECK( nvs_flash_init() );
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+// void app_main(void)
+// {
+//     ESP_ERROR_CHECK( nvs_flash_init() );
+//     ESP_ERROR_CHECK(esp_netif_init());
+//     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-     * Read "Establishing Wi-Fi or Ethernet Connection" section in
-     * examples/protocols/README.md for more information about this function.
-     */
-    ESP_ERROR_CHECK(example_connect());
+//     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
+//      * Read "Establishing Wi-Fi or Ethernet Connection" section in
+//      * examples/protocols/README.md for more information about this function.
+//      */
+//     ESP_ERROR_CHECK(example_connect());
 
-    char location[256] = "";
+//     char location[256] = "";
 
-    get_location(location);
-    printf("Location: %s\n", location);
-}
+//     get_location(location);
+//     printf("Location: %s\n", location);
+// }
