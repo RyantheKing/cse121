@@ -18,3 +18,6 @@ esp/
 !lab5/lab5_1/lab5_1
 !lab2/lab2_1/lab2_image.elf
 !lab7/server.py
+!lab8/*/src
+!lab8/*/src/*
+!lab8/*/Cargo.toml
