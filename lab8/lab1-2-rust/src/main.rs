@@ -1,5 +1,5 @@
 use log::info;
-use esp_idf_svc::sys::*;
+use esp_idf_sys::*;
 use std::*;
 
 fn main() {
@@ -11,8 +11,6 @@ fn main() {
     esp_idf_svc::log::EspLogger::initialize_default();
 
     info!("Hello world!");
-
-    // Add chip info stuff
 
     info!("Ryan King");
     
